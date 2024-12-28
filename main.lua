@@ -1,3 +1,4 @@
+--MAKE PRESTIGE HELPERS BUYABLE!!!!
 function love.load()
     --Libaries
     anim8 = require 'libaries/anim8'
@@ -9,7 +10,7 @@ function love.load()
 
 
     playerstats = {}
-    playerstats.clicks = 0
+    playerstats.clicks = 5000
     playerstats.multi = 1
     playerstats.x = 200
     playerstats.y = 100
@@ -23,6 +24,16 @@ function love.load()
     
     playerstats.anim = playerstats.mood.neutral
 
+    playerstats.prestige = {}
+    playerstats.prestige.level = 0
+    playerstats.prestige.coins = 0
+    playerstats.prestige.cost = 5000
+
+    playerstats.prestige.helper = {}
+    playerstats.prestige.helper.amount = 0
+    playerstats.prestige.helper.cost = 1
+    playerstats.prestige.helper.timer = 100
+    playerstats.prestige.helper.currentTimer = 0
 
     UpgradeBTN = {}
     UpgradeBTN.x = width/2-400
@@ -54,22 +65,49 @@ function love.update(dt)
         UpgradeBTN.cost = UpgradeBTN.cost + math.floor(UpgradeBTN.cost^1.001)
     end
 
-    --Helper progress
+    --Helper & sHelper progress
     Helpers.currentTimer = Helpers.currentTimer + 1
+    playerstats.prestige.helper.currentTimer = playerstats.prestige.helper.currentTimer + 1 
+
 
     --Helper payout
     if Helpers.currentTimer >= Helpers.timer and Helpers.amount >= 1 then
         playerstats.clicks = playerstats.clicks + Helpers.amount * playerstats.multi
         Helpers.currentTimer = 0
     end
+
+    if  playerstats.prestige.helper.currentTimer >= playerstats.prestige.helper.timer and playerstats.prestige.helper.amount >= 1 then
+        playerstats.clicks = playerstats.clicks + playerstats.prestige.level
+        playerstats.prestige.helper.currentTimer = 0
+    end
     
     --Helper upgrade
     if love.keyboard.isDown("e") and playerstats.clicks >= Helpers.cost then
-        love.timer.sleep(0.1)
+        love.timer.sleep(0.25)
         Helpers.amount = Helpers.amount + 1
         playerstats.clicks = playerstats.clicks - Helpers.cost
         Helpers.level = Helpers.level + 1 
         Helpers.cost = Helpers.cost + math.floor(Helpers.cost^1.0001)
+    end
+
+    --Prestige upgrade
+    if love.keyboard.isDown("p") and playerstats.clicks >= playerstats.prestige.cost then
+        love.timer.sleep(0.5)
+        playerstats.clicks = 0
+        playerstats.multi = 1
+        Helpers.amount = 0
+        Helpers.cost = 10
+        Helpers.level = 1
+        Helpers.timer = 500
+        Helpers.currentTimer = 0
+        UpgradeBTN.cost = 2
+        UpgradeBTN.level = 1
+        playerstats.prestige.helper.timer = 100
+        playerstats.prestige.helper.currentTimer = 0
+        playerstats.prestige.level = playerstats.prestige.level + 1
+
+        playerstats.prestige.coins = playerstats.prestige.coins + 1 
+        playerstats.prestige.cost = playerstats.prestige.cost * 2
     end
 
 
@@ -89,10 +127,14 @@ end
 function love.draw()
     --Amount of clicks the player has
     love.graphics.print("Clicks: ".. tostring(playerstats.clicks),0,0)
+    --Amount of prestige coins
+    love.graphics.print("Prestige coins: ".. tostring(playerstats.prestige.coins),0,13)
     --Upgrade the multiplier text
     love.graphics.print("Q to upgrade. You get ".. tostring(UpgradeBTN.level).. " per click. Level: "..tostring(playerstats.multi * 1+playerstats.multi).. " Cost: ".. tostring(math.floor(UpgradeBTN.cost)),UpgradeBTN.x+10,UpgradeBTN.y+64)
     --Upgrade the helper text
     love.graphics.print("E to upgrade. You get ".. tostring(Helpers.amount * playerstats.multi).. " when helpers activate. Level: ".. tostring(Helpers.level).." Cost: "..tostring(Helpers.cost) ,Helpers.x,Helpers.y)
+    --Prestige cost amount
+    love.graphics.print("P to upgrade. You get 1 prestige coin and lose all progress ".."Cost: "..tostring(playerstats.prestige.cost),10,517)
     --Draws the Racoon
     playerstats.anim:draw(playerstats.spriteSheet,playerstats.x,playerstats.y,nil, 3)
 end
